@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Painel Barbearia</title>
+<style>
+  :root{
+    --bg:#0b0b0b; --card:#111; --accent:#d4a253; --muted:#aaaaaa; --ok:#2ecc71;
+  }
+  *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+  body{margin:0;background:var(--bg);color:#fff;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+  .container{width:100%;max-width:980px}
+  .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 30px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.03)}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  h1{margin:0;font-size:20px;color:var(--accent)}
+  .login {max-width:420px;margin:0 auto;}
+  label{display:block;color:var(--muted);font-size:13px;margin-top:10px}
+  input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #222;background:#0d0d0d;color:#fff;margin-top:6px}
+  button{background:var(--accent);border:none;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:12px}
+  .small{font-size:13px;color:var(--muted)}
+  .hidden{display:none}
+  .row{display:flex;gap:10px;align-items:center}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+  .ap-card{background:#0d0d0d;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+  .ap-card h3{margin:0 0 6px 0;font-size:16px;color:var(--accent)}
+  .ap-meta{font-size:13px;color:var(--muted);margin-bottom:8px}
+  .ap-actions{display:flex;gap:8px}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:#fff;cursor:pointer}
+  .btn-done{background:var(--ok);color:#000;border:none;padding:8px;border-radius:8px;cursor:pointer}
+  .logout{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:8px;border-radius:8px;cursor:pointer}
+  .status{display:inline-block;padding:6px 8px;border-radius:999px;font-size:12px}
+  .status.pendente{background:#2b2b2b;color:var(--muted)}
+  .status.concluido{background:var(--ok);color:#000}
+  .top-right{display:flex;gap:8px;align-items:center}
+  .note{font-size:13px;color:var(--muted);margin-top:10px}
+</style>
+</head>
+<body>
+  <div class="container card">
+
+    <!-- LOGIN -->
+    <div id="view-login">
+      <div class="top">
+        <h1>Painel Barbearia</h1>
+        <div class="small">Acesse com credenciais dos barbeiros</div>
+      </div>
+
+      <div class="login">
+        <label for="usuario">Nome (ex: Andre)</label>
+        <input id="usuario" placeholder="Digite seu nome (Andre, Prata ou Rennan)" />
+
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" placeholder="Senha" />
+
+        <div class="row">
+          <button id="btn-login">Entrar</button>
+        </div>
+      </div>
+    </div> <!-- ← AQUI FECHA O LOGIN (CORRIGIDO) -->
+
+    <!-- PAINEL -->
+    <div id="view-panel" class="hidden">
+      <div class="top">
+        <h1 id="painel-title">Painel</h1>
+        <div class="top-right">
+          <div id="usuario-info" class="small"></div>
+          <button id="btn-logout" class="logout">Logout</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div>
+            <strong>Filtrar dia:</strong>
+            <input id="filtro-data" type="date" style="padding:8px;border-radius:8px;background:#0b0b0b;border:1px solid #222;color:#fff" />
+          </div>
+          <div class="small">Os agendamentos aparecem em tempo real</div>
+        </div>
+      </div>
+
+      <div id="lista" class="grid"></div>
+    </div>
+
+  </div>
+
+<script type="module">
+
+/* ==== FIREBASE ==== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getDatabase, ref, onValue, get, set, update, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDM0DEdaswHxdjcM5fGZOIg34nO464ccu8",
+  authDomain: "barbearia-d5ef8.firebaseapp.com",
+  databaseURL: "https://barbearia-d5ef8-default-rtdb.firebaseio.com",
+  projectId: "barbearia-d5ef8",
+  storageBucket: "barbearia-d5ef8.firebasestorage.app",
+  messagingSenderId: "296046163984",
+  appId: "1:296046163984:web:61f9ab42e8b68f1952f295"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* ==== CREDENCIAIS ==== */
+const CRED = {
+  "andre":"1111",
+  "prata":"2222",
+  "rennan":"3333",
+  "admin":"admin000"
+};
+
+function normalizeName(name){
+  return name.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/* ELEMENTOS */
+const viewLogin = document.getElementById('view-login');
+const viewPanel = document.getElementById('view-panel');
+const btnLogin = document.getElementById('btn-login');
+const usuarioInput = document.getElementById('usuario');
+const senhaInput = document.getElementById('senha');
+const lista = document.getElementById('lista');
+const painelTitle = document.getElementById('painel-title');
+const usuarioInfo = document.getElementById('usuario-info');
+const btnLogout = document.getElementById('btn-logout');
+const filtroData = document.getElementById('filtro-data');
+
+let currentUser = null;
+let currentListener = null;
+
+/* LOGIN */
+btnLogin.onclick = async () => {
+  const nome = usuarioInput.value || '';
+  const senha = senhaInput.value || '';
+  const key = normalizeName(nome);
+
+  if(!(key in CRED) || CRED[key] !== senha){
+    alert('Credenciais inválidas');
+    return;
+  }
+
+  currentUser = { key, display: nome.trim(), isAdmin: key==="admin" };
+  abrirPainel();
+  startRealtime();
+};
+
+function abrirPainel(){
+  viewLogin.classList.add('hidden');
+  viewPanel.classList.remove('hidden');
+  painelTitle.textContent = currentUser.isAdmin ? 'Painel (Admin)' : `Painel - ${currentUser.display}`;
+  usuarioInfo.textContent = currentUser.display;
+}
+
+/* LOGOUT */
+btnLogout.onclick = () => {
+  if(currentListener) currentListener();
+  currentUser = null;
+  lista.innerHTML = '';
+  viewPanel.classList.add('hidden');
+  viewLogin.classList.remove('hidden');
+};
+
+/* REALTIME */
+function startRealtime(){
+  if(currentListener) currentListener();
+  const agRef = ref(db, "agendamentos/");
+  const off = onValue(agRef, snap => renderList(snap.val() || {}));
+  currentListener = off;
+}
+
+function renderList(data){
+  const arr = Object.keys(data).map(k => ({ id: k, ...data[k] }));
+  const filtro = filtroData.value;
+
+  let filtered = arr.filter(item => {
+    if(filtro && item.data !== filtro) return false;
+    if(currentUser.isAdmin) return true;
+    return normalizeName(item.barbeiro) === currentUser.key;
+  });
+
+  filtered.sort((a,b)=>{
+    if(a.data === b.data) return a.hora > b.hora ? 1 : -1;
+    return a.data > b.data ? 1 : -1;
+  });
+
+  lista.innerHTML = '';
+
+  if(filtered.length === 0){
+    lista.innerHTML = '<div class="small" style="color:var(--muted)">Nenhum agendamento encontrado.</div>';
+    return;
+  }
+
+  filtered.forEach(item=>{
+    const div = document.createElement('div');
+    div.className='ap-card';
+    const st = item.status==="concluido" ? "concluido" : "pendente";
+    div.innerHTML=`
+      <h3>${item.nome || 'Sem nome'}</h3>
+      <div class="ap-meta">Barbeiro: <strong>${item.barbeiro}</strong> • Data: <strong>${item.data}</strong> • Hora: <strong>${item.hora}</strong></div>
+      <div class="ap-meta small">ID: ${item.id}</div>
+
+      <div class="ap-actions">
+        <span class="status ${st}">${st}</span>
+        <div style="flex:1"></div>
+        ${
+          st==="concluido"
+          ? `<button class="btn-ghost" data-id="${item.id}" data-action="reabrir">Reabrir</button>`
+          : `<button class="btn-done" data-id="${item.id}" data-action="concluir">Concluir</button>`
+        }
+        <button class="btn-ghost" data-id="${item.id}" data-action="remover">Remover</button>
+      </div>
+    `;
+    lista.appendChild(div);
+  });
+
+  lista.querySelectorAll("button").forEach(btn=>{
+    btn.onclick = ()=> handleAction(btn.dataset.action, btn.dataset.id);
+  });
+}
+
+async function handleAction(a,id){
+  const r = ref(db,"agendamentos/"+id);
+  if(a==="concluir") update(r,{status:"concluido"});
+  if(a==="reabrir") update(r,{status:"pendente"});
+  if(a==="remover"){
+    if(confirm("Remover agendamento?")) remove(r);
+  }
+}
+
+filtroData.onchange = ()=>{
+  get(ref(db,"agendamentos/")).then(s=>renderList(s.val()||{}));
+};
+
+</script>
+</body>
+</html>
