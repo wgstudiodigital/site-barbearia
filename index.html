@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barbearia Dom Du Corte</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- MENU -->
+    <header>
+        <img src="img/imagem_cortada_circular.png" alt="logo" class="logo">
+        <h1 class="h1">Barbearia Dom Du Corte</h1>
+        <nav>
+
+            <a href="painel.html" id="btnPainel" class="btn-topo">Painel</a>
+
+        </nav>
+    </header>
+
+    <!-- BANNER -->
+    <video autoplay muted loop playsinline class="video-bg">
+        <source src="video/fundo.mp4" type="video/mp4">
+    </video>
+
+    <div class="hero-content">
+        <h2>Seu corte, do seu jeito.</h2>
+        <p>Agende seu horário com nossos melhores barbeiros.</p>
+        <button id="agendar">Agendar Agora</button>
+    </div>
+    </section>
+
+
+    <!-- SERVIÇOS -->
+    <section id="servicos">
+        <h2>Nossos Serviços</h2>
+        <div class="cards">
+            <div class="card">
+                <h3>Corte</h3>
+                <p>R$ 35,00</p>
+            </div>
+            <div class="card">
+                <h3>Barba</h3>
+                <p>R$ 20,00</p>
+            </div>
+            <div class="card">
+                <h3>Corte + Barba</h3>
+                <p>R$ 45,00</p>
+            </div>
+             <div class="card">
+                <h3>Hidratação De Pele</h3>
+                <p>R$ 45,00</p>
+        </div>
+    </section>
+
+    <!-- MODAL DE AGENDAMENTO -->
+    <div class="overlay"></div>
+
+    <div class="popup">
+        <h2>Agendar Corte</h2>
+
+        <label for="barbeiro">Escolha o barbeiro:</label>
+        <select id="barbeiro">
+            <option value="andre">Andre Ceo</option>
+            <option value="prata">Andre Prata</option>
+            <option value="rennan">Rennan</option>
+        </select>
+
+        <label for="data">Data:</label>
+        <input type="date" id="data">
+
+        <label for="hora">Hora:</label>
+        <select id="hora"></select>
+
+        <label for="nomeCliente">Seu nome:</label>
+        <input type="text" id="nomeCliente">
+
+        <button id="confirmar">Confirmar</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDM0DEdaswHxdjcM5fGZOIg34nO464ccu8",
+            authDomain: "barbearia-d5ef8.firebaseapp.com",
+            databaseURL: "https://barbearia-d5ef8-default-rtdb.firebaseio.com",
+            projectId: "barbearia-d5ef8",
+            storageBucket: "barbearia-d5ef8.firebasestorage.app",
+            messagingSenderId: "296046163984",
+            appId: "1:296046163984:web:61f9ab42e8b68f1952f295"
+        };
+
+        // iniciar firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // deixar o banco acessível no script.js
+        window._db = db;
+        window._ref = ref;
+        window._get = get;
+        window._set = set;
+
+    </script>
+
+    <script src="script.js"></script>
+
+    <div id="toast" class="toast hidden"></div>
+</body>
+
+</html>
