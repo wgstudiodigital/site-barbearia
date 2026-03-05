@@ -817,7 +817,7 @@
       return;
     }
     if (action === "remover") {
-      if (!currentUser?.isAdmin) return;
+      
       if (confirm("Remover agendamento?")) {
         await remove(r);
       }
