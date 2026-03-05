@@ -778,7 +778,7 @@
       // Permissões:
       // - Barbeiro: pode concluir/reabrir, não pode remover
       // - Admin: pode concluir/reabrir e remover
-      const canDelete = !!currentUser?.isAdmin;
+      const canDelete = true;
 
       card.innerHTML = `
         <h4>${ap.nome || "Sem nome"}</h4>
