@@ -7,7 +7,8 @@
 
   <!-- Chart.js (gráfico) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
+<link rel="manifest" href="/painel/manifest.json">
+<meta name="theme-color" content="#000000">
   <style>
     :root{
       --bg:#0b0b0b;
@@ -823,6 +824,9 @@
       }
       return;
     }
+  }
+  if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
   }
 </script>
 
